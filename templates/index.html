@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Python Compiler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            height: 70vh;
+        }
+
+        .editor-section {
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-section {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            background: #343a40;
+            color: white;
+            font-weight: bold;
+        }
+
+        .editor-section .section-header {
+            background: #495057;
+        }
+
+        .toolbar {
+            padding: 10px 20px;
+            background: #f1f3f4;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        #codeEditor {
+            flex: 1;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            border: none;
+            outline: none;
+            padding: 20px;
+            background: #ffffff;
+            color: #333;
+            resize: none;
+            line-height: 1.5;
+        }
+
+        #output {
+            flex: 1;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            padding: 20px;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .package-manager {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .package-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .examples-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .examples-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+        }
+
+        .examples-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #eee;
+        }
+
+        .examples-content a:hover {
+            background: #f1f1f1;
+        }
+
+        .examples-dropdown:hover .examples-content {
+            display: block;
+        }
+
+        .status {
+            padding: 10px 20px;
+            font-size: 12px;
+            background: #e9ecef;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .editor-section, .output-section {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐍 Online Python Compiler</h1>
+            <p>Kodlarınızı yazın, çalıştırın ve sonuçları anında görün!</p>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="section-header">
+                    📝 Kod Editörü
+                </div>
+                
+                <div class="toolbar">
+                    <button class="btn btn-primary" onclick="runCode()">
+                        ▶️ Çalıştır
+                    </button>
+                    <button class="btn btn-warning" onclick="clearCode()">
+                        🗑️ Temizle
+                    </button>
+                    <div class="examples-dropdown">
+                        <button class="btn btn-info">
+                            📚 Örnekler
+                        </button>
+                        <div class="examples-content" id="examplesContent">
+                            <!-- Örnekler buraya yüklenecek -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="package-manager">
+                    <input type="text" class="package-input" id="packageInput" placeholder="Paket adı (örn: requests, numpy)">
+                    <button class="btn btn-success" onclick="installPackage()">
+                        📦 Yükle
+                    </button>
+                </div>
+
+                <textarea id="codeEditor" placeholder="Python kodunuzu buraya yazın...">print("Merhaba Dünya!")
+print("Python Compiler'a hoş geldiniz!")
+
+# Basit bir hesaplama
+a = 10
+b = 20
+print(f"Toplam: {a + b}")
+
+# Liste örneği
+sayilar = [1, 2, 3, 4, 5]
+print(f"Sayılar: {sayilar}")
+print(f"Toplam: {sum(sayilar)}")
+</textarea>
+            </div>
+
+            <div class="output-section">
+                <div class="section-header">
+                    💻 Çıktı
+                </div>
+                
+                <div class="status" id="status">
+                    Kodu çalıştırmak için "Çalıştır" butonuna tıklayın
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    Kod çalıştırılıyor...
+                </div>
+
+                <pre id="output">Çıktı burada görünecek...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Örnekleri yükle
+        async function loadExamples() {
+            try {
+                const response = await fetch('/examples');
+                const examples = await response.json();
+                
+                const container = document.getElementById('examplesContent');
+                container.innerHTML = '';
+                
+                examples.forEach(example => {
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.textContent = example.title;
+                    link.onclick = () => loadExample(example.code);
+                    container.appendChild(link);
+                });
+            } catch (error) {
+                console.error('Örnekler yüklenirken hata:', error);
+            }
+        }
+
+        // Örnek kodu yükle
+        function loadExample(code) {
+            document.getElementById('codeEditor').value = code;
+            updateStatus('Örnek kod yüklendi', 'success');
+        }
+
+        // Kodu çalıştır
+        async function runCode() {
+            const code = document.getElementById('codeEditor').value;
+            const output = document.getElementById('output');
+            const loading = document.getElementById('loading');
+            
+            if (!code.trim()) {
+                updateStatus('Kod boş olamaz!', 'error');
+                return;
+            }
+
+            // Loading göster
+            loading.style.display = 'block';
+            output.textContent = '';
+            updateStatus('Kod çalıştırılıyor...', '');
+
+            try {
+                const response = await fetch('/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+
+                const result = await response.json();
+                
+                // Loading gizle
+                loading.style.display = 'none';
+
+                if (result.success) {
+                    output.textContent = result.output || 'Kod başarıyla çalıştırıldı (çıktı yok)';
+                    updateStatus('✅ Kod başarıyla çalıştırıldı', 'success');
+                } else {
+                    output.textContent = result.error || 'Bilinmeyen hata';
+                    updateStatus('❌ Kod çalıştırılırken hata oluştu', 'error');
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                output.textContent = 'Sunucu hatası: ' + error.message;
+                updateStatus('❌ Sunucu hatası', 'error');
+            }
+        }
+
+        // Paket yükle
+        async function installPackage() {
+            const packageName = document.getElementById('packageInput').value;
+            
+            if (!packageName.trim()) {
+                updateStatus('Paket adı boş olamaz!', 'error');
+                return;
+            }
+
+            updateStatus('Paket yükleniyor...', '');
+
+            try {
+                const response = await fetch('/install', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ package: packageName })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateStatus('📦 ' + result.message, 'success');
+                    document.getElementById('packageInput').value = '';
+                } else {
+                    updateStatus('❌ ' + result.message, 'error');
+                }
+            } catch (error) {
+                updateStatus('❌ Paket yükleme hatası: ' + error.message, 'error');
+            }
+        }
+
+        // Kodu temizle
+        function clearCode() {
+            document.getElementById('codeEditor').value = '';
+            document.getElementById('output').textContent = 'Çıktı burada görünecek...';
+            updateStatus('Kod temizlendi', 'success');
+        }
+
+        // Status güncelle
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        // Klavye kısayolları
+        document.getElementById('codeEditor').addEventListener('keydown', function(e) {
+            // Ctrl+Enter ile kodu çalıştır
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+            
+            // Tab tuşu için girintileme
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+
+        // Package input'ta Enter tuşu
+        document.getElementById('packageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                installPackage();
+            }
+        });
+
+        // Sayfa yüklendiğinde örnekleri yükle
+        window.addEventListener('load', loadExamples);
+    </script>
+</body>
+</html>
